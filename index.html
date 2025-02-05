@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Bodega Control - Inventario, Ventas y Reportes</title>
+    <style>
+      /* Estilos básicos para layout y diseño */
+      * {
+        box-sizing: border-box;
+        font-family: Arial, sans-serif;
+      }
+      body {
+        margin: 0;
+        background: #f2f2f2;
+        color: #333;
+      }
+      header {
+        background: #004d99;
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+      nav {
+        background: #0066cc;
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+      }
+      nav a {
+        color: white;
+        padding: 15px 20px;
+        text-decoration: none;
+        display: block;
+      }
+      nav a:hover {
+        background: #005bb5;
+      }
+      .section {
+        display: none;
+        padding: 20px;
+        background: white;
+        margin: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .section.active {
+        display: block;
+      }
+      h2 {
+        margin-top: 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid #ccc;
+      }
+      th,
+      td {
+        padding: 8px;
+        text-align: left;
+      }
+      form label {
+        display: block;
+        margin-top: 10px;
+        font-weight: bold;
+      }
+      form input,
+      form button {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+      }
+      form button {
+        background: #004d99;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-top: 15px;
+      }
+      form button:hover {
+        background: #003d80;
+      }
+      /* Botón flotante para escanear código */
+      #btnScan {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        background: #e60000;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        font-size: 28px;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+      }
+      /* Modal para escanear código de barras */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1100;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        align-items: center;
+        justify-content: center;
+      }
+      .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        text-align: center;
+        position: relative;
+      }
+      .modal-content video {
+        width: 100%;
+        max-height: 300px;
+      }
+      .modal-content .close {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 24px;
+        cursor: pointer;
+      }
+      /* Estilos para pestañas de reportes */
+      .tabs {
+        display: flex;
+        border-bottom: 1px solid #ccc;
+        margin-bottom: 15px;
+      }
+      .tabs button {
+        flex: 1;
+        padding: 10px;
+        cursor: pointer;
+        background: #f2f2f2;
+        border: none;
+        border-bottom: 3px solid transparent;
+        font-weight: bold;
+      }
+      .tabs button.active {
+        background: #fff;
+        border-bottom: 3px solid #004d99;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Bodega Control</h1>
+      <p>Inventario • Ventas • Reportes</p>
+    </header>
+    <nav>
+      <a href="#" data-section="inventario">Inventario</a>
+      <a href="#" data-section="agregar">Agregar Producto</a>
+      <a href="#" data-section="ventas">Ventas</a>
+      <a href="#" data-section="reportes">Reportes</a>
+    </nav>
+    <main>
+      <!-- Sección Inventario -->
+      <div id="inventario" class="section active">
+        <h2>Inventario de Productos</h2>
+        <table id="tablaInventario">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Producto</th>
+              <th>Precio Compra</th>
+              <th>Precio Venta</th>
+              <th>Stock</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Se llenará dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+      <!-- Sección Agregar Producto -->
+      <div id="agregar" class="section">
+        <h2>Agregar Nuevo Producto</h2>
+        <form id="formAgregar">
+          <label for="codigo">Código de Barras:</label>
+          <input type="text" id="codigo" required />
+          <label for="nombre">Nombre del Producto:</label>
+          <input type="text" id="nombre" required />
+          <label for="precioCompra">Precio de Compra:</label>
+          <input type="number" id="precioCompra" step="0.01" required />
+          <label for="precioVenta">Precio de Venta:</label>
+          <input type="number" id="precioVenta" step="0.01" required />
+          <label for="stock">Stock Inicial:</label>
+          <input type="number" id="stock" required />
+          <button type="submit">Agregar Producto</button>
+        </form>
+      </div>
+      <!-- Sección Ventas -->
+      <div id="ventas" class="section">
+        <h2>Ventas</h2>
+        <p>Escanea el código de barras o ingrésalo manualmente:</p>
+        <input type="text" id="codigoVenta" placeholder="Código de barras" />
+        <button id="btnBuscarVenta">Buscar Producto</button>
+        <div id="infoProductoVenta" style="margin-top: 15px"></div>
+        <div id="controlesVenta" style="display: none; margin-top: 15px">
+          <label for="cantidadVenta">Cantidad a Vender:</label>
+          <input type="number" id="cantidadVenta" min="1" value="1" />
+          <button id="btnAgregarCarritoVenta">Agregar al Carrito</button>
+        </div>
+        <h3>Carrito de Ventas</h3>
+        <table id="tablaCarrito">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Producto</th>
+              <th>Cantidad</th>
+              <th>Total Venta</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Se llenará dinámicamente -->
+          </tbody>
+        </table>
+        <button id="btnFinalizarVenta">Finalizar Venta</button>
+      </div>
+      <!-- Sección Reportes -->
+      <div id="reportes" class="section">
+        <h2>Reportes</h2>
+        <div class="tabs">
+          <button class="tabLink active" data-tab="diario">Diario</button>
+          <button class="tabLink" data-tab="semanal">Semanal</button>
+          <button class="tabLink" data-tab="mensual">Mensual</button>
+          <button class="tabLink" data-tab="anual">Anual</button>
+        </div>
+        <div id="diario" class="tab-content active">
+          <h3>Reporte Diario</h3>
+          <div id="reporteDiario"></div>
+        </div>
+        <div id="semanal" class="tab-content">
+          <h3>Reporte Semanal</h3>
+          <div id="reporteSemanal"></div>
+        </div>
+        <div id="mensual" class="tab-content">
+          <h3>Reporte Mensual</h3>
+          <div id="reporteMensual"></div>
+        </div>
+        <div id="anual" class="tab-content">
+          <h3>Reporte Anual</h3>
+          <div id="reporteAnual"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Botón flotante para escanear código de barras -->
+    <button id="btnScan" title="Escanear Código">📷</button>
+
+    <!-- Modal para escaneo de código de barras -->
+    <div id="modalScan" class="modal">
+      <div class="modal-content">
+        <span class="close" id="closeModal">&times;</span>
+        <h3>Escanea el Código de Barras</h3>
+        <video id="videoScan" autoplay></video>
+        <p id="barcodeResult">Esperando lectura...</p>
+      </div>
+    </div>
+
+    <!-- Incluir Firebase y QuaggaJS -->
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+    <script>
+      /********* Configuración de Firebase *********/
+      // Reemplaza los valores con tu propia configuración de Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyAGN1eonMb-n4Y6M67eeoq5ZCaKEAeCh78",
+        authDomain: "webcesar-5dd28.firebaseapp.com",
+        projectId: "webcesar-5dd28",
+        storageBucket: "webcesar-5dd28.firebasestorage.app",
+        messagingSenderId: "1013117016849",
+        appId: "1:1013117016849:web:d4c5e55425f9d40a9c8ab0",
+      };
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+
+      /********* Variables Globales *********/
+      let inventario = JSON.parse(localStorage.getItem("inventario")) || [];
+      let ventas = JSON.parse(localStorage.getItem("ventas")) || [];
+      let carrito = [];
+
+      /********* Referencias a elementos *********/
+      const tablaInventario = document.querySelector("#tablaInventario tbody");
+      const formAgregar = document.getElementById("formAgregar");
+      const codigoVentaInput = document.getElementById("codigoVenta");
+      const btnBuscarVenta = document.getElementById("btnBuscarVenta");
+      const infoProductoVenta = document.getElementById("infoProductoVenta");
+      const controlesVenta = document.getElementById("controlesVenta");
+      const cantidadVenta = document.getElementById("cantidadVenta");
+      const btnAgregarCarritoVenta = document.getElementById(
+        "btnAgregarCarritoVenta"
+      );
+      const tablaCarrito = document.querySelector("#tablaCarrito tbody");
+      const btnFinalizarVenta = document.getElementById("btnFinalizarVenta");
+      const reporteDiarioDiv = document.getElementById("reporteDiario");
+      const reporteSemanalDiv = document.getElementById("reporteSemanal");
+      const reporteMensualDiv = document.getElementById("reporteMensual");
+      const reporteAnualDiv = document.getElementById("reporteAnual");
+
+      const btnScan = document.getElementById("btnScan");
+      const modalScan = document.getElementById("modalScan");
+      const closeModal = document.getElementById("closeModal");
+      const videoScan = document.getElementById("videoScan");
+      const barcodeResultP = document.getElementById("barcodeResult");
+
+      /********* Funciones de Navegación *********/
+      document.querySelectorAll("nav a").forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const sectionId = link.getAttribute("data-section");
+          document
+            .querySelectorAll(".section")
+            .forEach((sec) => sec.classList.remove("active"));
+          document.getElementById(sectionId).classList.add("active");
+        });
+      });
+
+      /********* Funciones de Pestañas en Reportes *********/
+      document.querySelectorAll(".tabLink").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const target = tab.getAttribute("data-tab");
+          document
+            .querySelectorAll(".tabLink")
+            .forEach((t) => t.classList.remove("active"));
+          document
+            .querySelectorAll(".tab-content")
+            .forEach((c) => c.classList.remove("active"));
+          tab.classList.add("active");
+          document.getElementById(target).classList.add("active");
+          generarReporte(target);
+        });
+      });
+
+      /********* Funciones de Inventario *********/
+      function actualizarInventario() {
+        tablaInventario.innerHTML = "";
+        inventario.forEach((prod) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+          <td>${prod.codigo}</td>
+          <td>${prod.nombre}</td>
+          <td>$${parseFloat(prod.precioCompra).toFixed(2)}</td>
+          <td>$${parseFloat(prod.precioVenta).toFixed(2)}</td>
+          <td>${prod.stock > 0 ? prod.stock : "Stock no disponible"}</td>
+        `;
+          tablaInventario.appendChild(tr);
+        });
+        localStorage.setItem("inventario", JSON.stringify(inventario));
+      }
+
+      /********* Funciones de Ventas y Carrito *********/
+      btnBuscarVenta.addEventListener("click", () => {
+        const codigo = codigoVentaInput.value.trim();
+        if (!codigo) return;
+        const producto = inventario.find((p) => p.codigo === codigo);
+        if (producto) {
+          if (producto.stock <= 0) {
+            infoProductoVenta.innerHTML = `<p style="color:red;">Stock no disponible</p>`;
+            controlesVenta.style.display = "none";
+          } else {
+            infoProductoVenta.innerHTML = `
+            <p><strong>${producto.nombre}</strong></p>
+            <p>Precio Venta: $${producto.precioVenta.toFixed(2)}</p>
+            <p>Stock: ${producto.stock}</p>
+          `;
+            controlesVenta.style.display = "block";
+            controlesVenta.setAttribute("data-codigo", producto.codigo);
+          }
+        } else {
+          infoProductoVenta.innerHTML = `<p style="color:red;">Producto no encontrado</p>`;
+          controlesVenta.style.display = "none";
+        }
+      });
+
+      btnAgregarCarritoVenta.addEventListener("click", () => {
+        const codigo = controlesVenta.getAttribute("data-codigo");
+        const cantidad = parseInt(cantidadVenta.value);
+        if (!codigo || cantidad < 1) return;
+        const producto = inventario.find((p) => p.codigo === codigo);
+        if (!producto) return;
+        if (cantidad > producto.stock) {
+          alert("La cantidad solicitada excede el stock disponible.");
+          return;
+        }
+        producto.stock -= cantidad;
+        const index = carrito.findIndex((item) => item.codigo === codigo);
+        if (index >= 0) {
+          carrito[index].cantidad += cantidad;
+        } else {
+          carrito.push({
+            codigo: producto.codigo,
+            nombre: producto.nombre,
+            precioVenta: producto.precioVenta,
+            cantidad: cantidad,
+          });
+        }
+        actualizarInventario();
+        actualizarCarrito();
+        codigoVentaInput.value = "";
+        infoProductoVenta.innerHTML = "";
+        controlesVenta.style.display = "none";
+      });
+
+      function actualizarCarrito() {
+        tablaCarrito.innerHTML = "";
+        carrito.forEach((item, idx) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+          <td>${item.codigo}</td>
+          <td>${item.nombre}</td>
+          <td>
+            <input type="number" value="${
+              item.cantidad
+            }" min="1" style="width:60px;" data-index="${idx}" class="inputCantidad">
+          </td>
+          <td>$${(item.cantidad * item.precioVenta).toFixed(2)}</td>
+          <td><button data-index="${idx}" class="btnEliminar">Eliminar</button></td>
+        `;
+          tablaCarrito.appendChild(tr);
+        });
+      }
+
+      document.addEventListener("input", (e) => {
+        if (e.target.classList.contains("inputCantidad")) {
+          const idx = e.target.getAttribute("data-index");
+          const nuevaCantidad = parseInt(e.target.value);
+          if (nuevaCantidad < 1) return;
+          carrito[idx].cantidad = nuevaCantidad;
+          actualizarCarrito();
+        }
+      });
+
+      document.addEventListener("click", (e) => {
+        if (e.target.classList.contains("btnEliminar")) {
+          const idx = e.target.getAttribute("data-index");
+          carrito.splice(idx, 1);
+          actualizarCarrito();
+        }
+      });
+
+      function finalizarVenta() {
+        if (carrito.length === 0) {
+          alert("El carrito está vacío.");
+          return;
+        }
+        carrito.forEach((item) => {
+          const venta = {
+            codigo: item.codigo,
+            nombre: item.nombre,
+            cantidad: item.cantidad,
+            totalVenta: item.cantidad * item.precioVenta,
+            fecha: new Date().toISOString(),
+          };
+          ventas.push(venta);
+          // Guardar la venta en Firebase
+          db.collection("ventas")
+            .add(venta)
+            .then((docRef) =>
+              console.log("Venta registrada con ID:", docRef.id)
+            )
+            .catch((error) =>
+              console.error("Error al registrar venta:", error)
+            );
+        });
+        carrito = [];
+        actualizarCarrito();
+        localStorage.setItem("ventas", JSON.stringify(ventas));
+        alert("Venta finalizada y registrada.");
+        generarReporte("diario");
+        generarReporte("semanal");
+        generarReporte("mensual");
+        generarReporte("anual");
+      }
+      btnFinalizarVenta.addEventListener("click", finalizarVenta);
+
+      /********* Funciones de Reportes *********/
+      function filtrarVentas(filtro) {
+        const ahora = new Date();
+        return ventas.filter((venta) => {
+          const fechaVenta = new Date(venta.fecha);
+          if (filtro === "diario") {
+            return fechaVenta.toDateString() === ahora.toDateString();
+          } else if (filtro === "semanal") {
+            const diff = (ahora - fechaVenta) / (1000 * 60 * 60 * 24);
+            return diff <= 7;
+          } else if (filtro === "mensual") {
+            return (
+              ahora.getMonth() === fechaVenta.getMonth() &&
+              ahora.getFullYear() === fechaVenta.getFullYear()
+            );
+          } else if (filtro === "anual") {
+            return ahora.getFullYear() === fechaVenta.getFullYear();
+          }
+          return false;
+        });
+      }
+
+      function generarReporte(tipo) {
+        let ventasFiltradas = filtrarVentas(tipo);
+        let total = ventasFiltradas.reduce((acum, v) => acum + v.totalVenta, 0);
+        let html =
+          "<table style='width:100%; border-collapse: collapse;'><thead><tr><th>Código</th><th>Producto</th><th>Cantidad</th><th>Total Venta</th></tr></thead><tbody>";
+        ventasFiltradas.forEach((v) => {
+          html += `<tr>
+          <td>${v.codigo}</td>
+          <td>${v.nombre}</td>
+          <td>${v.cantidad}</td>
+          <td>$${v.totalVenta.toFixed(2)}</td>
+        </tr>`;
+        });
+        html += "</tbody></table>";
+        html += `<p>Total ${tipo}: $${total.toFixed(2)}</p>`;
+        if (tipo === "diario") {
+          reporteDiarioDiv.innerHTML = html;
+        } else if (tipo === "semanal") {
+          reporteSemanalDiv.innerHTML = html;
+        } else if (tipo === "mensual") {
+          reporteMensualDiv.innerHTML = html;
+        } else if (tipo === "anual") {
+          reporteAnualDiv.innerHTML = html;
+        }
+      }
+
+      /********* Funciones de Escaneo de Código de Barras con QuaggaJS *********/
+      btnScan.addEventListener("click", () => {
+        modalScan.style.display = "flex";
+        iniciarQuagga();
+      });
+      closeModal.addEventListener("click", () => {
+        detenerQuagga();
+        modalScan.style.display = "none";
+      });
+
+      function iniciarQuagga() {
+        if (
+          navigator.mediaDevices &&
+          typeof navigator.mediaDevices.getUserMedia === "function"
+        ) {
+          Quagga.init(
+            {
+              inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: videoScan,
+                constraints: {
+                  facingMode: "environment",
+                },
+              },
+              decoder: {
+                readers: ["ean_reader", "upc_reader", "code_128_reader"],
+              },
+            },
+            function (err) {
+              if (err) {
+                console.error(err);
+                return;
+              }
+              Quagga.start();
+            }
+          );
+          Quagga.onDetected(function (result) {
+            const code = result.codeResult.code;
+            barcodeResultP.textContent = "Código detectado: " + code;
+            codigoVentaInput.value = code;
+            detenerQuagga();
+            modalScan.style.display = "none";
+          });
+        } else {
+          alert("Tu dispositivo no soporta getUserMedia");
+        }
+      }
+      function detenerQuagga() {
+        Quagga.stop();
+        barcodeResultP.textContent = "Esperando lectura...";
+      }
+
+      /********* Persistencia y Eventos *********/
+      window.addEventListener("beforeunload", () => {
+        localStorage.setItem("inventario", JSON.stringify(inventario));
+        localStorage.setItem("ventas", JSON.stringify(ventas));
+      });
+
+      /********* Inicializar *********/
+      function inicializar() {
+        actualizarInventario();
+      }
+      inicializar();
+    </script>
+  </body>
+</html>
