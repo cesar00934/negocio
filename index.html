@@ -41,7 +41,7 @@
         background: white;
         margin: 20px;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
       .section.active {
         display: block;
@@ -54,13 +54,10 @@
         border-collapse: collapse;
         margin-top: 10px;
       }
-      table,
-      th,
-      td {
+      table, th, td {
         border: 1px solid #ccc;
       }
-      th,
-      td {
+      th, td {
         padding: 8px;
         text-align: left;
       }
@@ -69,8 +66,7 @@
         margin-top: 10px;
         font-weight: bold;
       }
-      form input,
-      form button {
+      form input, form button {
         width: 100%;
         padding: 8px;
         margin-top: 5px;
@@ -98,7 +94,7 @@
         height: 60px;
         font-size: 28px;
         cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         z-index: 1000;
       }
       /* Modal para escanear código de barras */
@@ -110,7 +106,7 @@
         top: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.6);
+        background: rgba(0,0,0,0.6);
         align-items: center;
         justify-content: center;
       }
@@ -214,8 +210,8 @@
         <p>Escanea el código de barras o ingrésalo manualmente:</p>
         <input type="text" id="codigoVenta" placeholder="Código de barras" />
         <button id="btnBuscarVenta">Buscar Producto</button>
-        <div id="infoProductoVenta" style="margin-top: 15px"></div>
-        <div id="controlesVenta" style="display: none; margin-top: 15px">
+        <div id="infoProductoVenta" style="margin-top:15px;"></div>
+        <div id="controlesVenta" style="display:none; margin-top:15px;">
           <label for="cantidadVenta">Cantidad a Vender:</label>
           <input type="number" id="cantidadVenta" min="1" value="1" />
           <button id="btnAgregarCarritoVenta">Agregar al Carrito</button>
@@ -284,14 +280,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
     <script>
       /********* Configuración de Firebase *********/
-      // Reemplaza los valores con tu propia configuración de Firebase
+      // Reemplaza estos valores con la configuración de tu proyecto Firebase
       const firebaseConfig = {
-        apiKey: "AIzaSyAGN1eonMb-n4Y6M67eeoq5ZCaKEAeCh78",
-        authDomain: "webcesar-5dd28.firebaseapp.com",
-        projectId: "webcesar-5dd28",
-        storageBucket: "webcesar-5dd28.firebasestorage.app",
-        messagingSenderId: "1013117016849",
-        appId: "1:1013117016849:web:d4c5e55425f9d40a9c8ab0",
+       apiKey: "AIzaSyAGN1eonMb-n4Y6M67eeoq5ZCaKEAeCh78",
+       authDomain: "webcesar-5dd28.firebaseapp.com",
+       projectId: "webcesar-5dd28",
+       storageBucket: "webcesar-5dd28.firebasestorage.app",
+       messagingSenderId: "1013117016849",
+       appId: "1:1013117016849:web:d4c5e55425f9d40a9c8ab0"
       };
       firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
@@ -309,9 +305,7 @@
       const infoProductoVenta = document.getElementById("infoProductoVenta");
       const controlesVenta = document.getElementById("controlesVenta");
       const cantidadVenta = document.getElementById("cantidadVenta");
-      const btnAgregarCarritoVenta = document.getElementById(
-        "btnAgregarCarritoVenta"
-      );
+      const btnAgregarCarritoVenta = document.getElementById("btnAgregarCarritoVenta");
       const tablaCarrito = document.querySelector("#tablaCarrito tbody");
       const btnFinalizarVenta = document.getElementById("btnFinalizarVenta");
       const reporteDiarioDiv = document.getElementById("reporteDiario");
@@ -326,27 +320,21 @@
       const barcodeResultP = document.getElementById("barcodeResult");
 
       /********* Funciones de Navegación *********/
-      document.querySelectorAll("nav a").forEach((link) => {
+      document.querySelectorAll("nav a").forEach(link => {
         link.addEventListener("click", (e) => {
           e.preventDefault();
           const sectionId = link.getAttribute("data-section");
-          document
-            .querySelectorAll(".section")
-            .forEach((sec) => sec.classList.remove("active"));
+          document.querySelectorAll(".section").forEach(sec => sec.classList.remove("active"));
           document.getElementById(sectionId).classList.add("active");
         });
       });
 
       /********* Funciones de Pestañas en Reportes *********/
-      document.querySelectorAll(".tabLink").forEach((tab) => {
+      document.querySelectorAll(".tabLink").forEach(tab => {
         tab.addEventListener("click", () => {
           const target = tab.getAttribute("data-tab");
-          document
-            .querySelectorAll(".tabLink")
-            .forEach((t) => t.classList.remove("active"));
-          document
-            .querySelectorAll(".tab-content")
-            .forEach((c) => c.classList.remove("active"));
+          document.querySelectorAll(".tabLink").forEach(t => t.classList.remove("active"));
+          document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
           tab.classList.add("active");
           document.getElementById(target).classList.add("active");
           generarReporte(target);
@@ -356,35 +344,50 @@
       /********* Funciones de Inventario *********/
       function actualizarInventario() {
         tablaInventario.innerHTML = "";
-        inventario.forEach((prod) => {
+        inventario.forEach(prod => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-          <td>${prod.codigo}</td>
-          <td>${prod.nombre}</td>
-          <td>$${parseFloat(prod.precioCompra).toFixed(2)}</td>
-          <td>$${parseFloat(prod.precioVenta).toFixed(2)}</td>
-          <td>${prod.stock > 0 ? prod.stock : "Stock no disponible"}</td>
-        `;
+            <td>${prod.codigo}</td>
+            <td>${prod.nombre}</td>
+            <td>$${parseFloat(prod.precioCompra).toFixed(2)}</td>
+            <td>$${parseFloat(prod.precioVenta).toFixed(2)}</td>
+            <td>${prod.stock > 0 ? prod.stock : "Stock no disponible"}</td>
+          `;
           tablaInventario.appendChild(tr);
         });
         localStorage.setItem("inventario", JSON.stringify(inventario));
       }
 
+      formAgregar.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const producto = {
+          codigo: document.getElementById("codigo").value.trim(),
+          nombre: document.getElementById("nombre").value.trim(),
+          precioCompra: parseFloat(document.getElementById("precioCompra").value),
+          precioVenta: parseFloat(document.getElementById("precioVenta").value),
+          stock: parseInt(document.getElementById("stock").value)
+        };
+        inventario.push(producto);
+        formAgregar.reset();
+        actualizarInventario();
+        alert("Producto agregado al inventario.");
+      });
+
       /********* Funciones de Ventas y Carrito *********/
       btnBuscarVenta.addEventListener("click", () => {
         const codigo = codigoVentaInput.value.trim();
         if (!codigo) return;
-        const producto = inventario.find((p) => p.codigo === codigo);
+        const producto = inventario.find(p => p.codigo === codigo);
         if (producto) {
           if (producto.stock <= 0) {
             infoProductoVenta.innerHTML = `<p style="color:red;">Stock no disponible</p>`;
             controlesVenta.style.display = "none";
           } else {
             infoProductoVenta.innerHTML = `
-            <p><strong>${producto.nombre}</strong></p>
-            <p>Precio Venta: $${producto.precioVenta.toFixed(2)}</p>
-            <p>Stock: ${producto.stock}</p>
-          `;
+              <p><strong>${producto.nombre}</strong></p>
+              <p>Precio Venta: $${producto.precioVenta.toFixed(2)}</p>
+              <p>Stock: ${producto.stock}</p>
+            `;
             controlesVenta.style.display = "block";
             controlesVenta.setAttribute("data-codigo", producto.codigo);
           }
@@ -398,14 +401,14 @@
         const codigo = controlesVenta.getAttribute("data-codigo");
         const cantidad = parseInt(cantidadVenta.value);
         if (!codigo || cantidad < 1) return;
-        const producto = inventario.find((p) => p.codigo === codigo);
+        const producto = inventario.find(p => p.codigo === codigo);
         if (!producto) return;
         if (cantidad > producto.stock) {
           alert("La cantidad solicitada excede el stock disponible.");
           return;
         }
         producto.stock -= cantidad;
-        const index = carrito.findIndex((item) => item.codigo === codigo);
+        const index = carrito.findIndex(item => item.codigo === codigo);
         if (index >= 0) {
           carrito[index].cantidad += cantidad;
         } else {
@@ -413,7 +416,7 @@
             codigo: producto.codigo,
             nombre: producto.nombre,
             precioVenta: producto.precioVenta,
-            cantidad: cantidad,
+            cantidad: cantidad
           });
         }
         actualizarInventario();
@@ -428,16 +431,14 @@
         carrito.forEach((item, idx) => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-          <td>${item.codigo}</td>
-          <td>${item.nombre}</td>
-          <td>
-            <input type="number" value="${
-              item.cantidad
-            }" min="1" style="width:60px;" data-index="${idx}" class="inputCantidad">
-          </td>
-          <td>$${(item.cantidad * item.precioVenta).toFixed(2)}</td>
-          <td><button data-index="${idx}" class="btnEliminar">Eliminar</button></td>
-        `;
+            <td>${item.codigo}</td>
+            <td>${item.nombre}</td>
+            <td>
+              <input type="number" value="${item.cantidad}" min="1" style="width:60px;" data-index="${idx}" class="inputCantidad">
+            </td>
+            <td>$${(item.cantidad * item.precioVenta).toFixed(2)}</td>
+            <td><button data-index="${idx}" class="btnEliminar">Eliminar</button></td>
+          `;
           tablaCarrito.appendChild(tr);
         });
       }
@@ -465,24 +466,19 @@
           alert("El carrito está vacío.");
           return;
         }
-        carrito.forEach((item) => {
+        carrito.forEach(item => {
           const venta = {
             codigo: item.codigo,
             nombre: item.nombre,
             cantidad: item.cantidad,
             totalVenta: item.cantidad * item.precioVenta,
-            fecha: new Date().toISOString(),
+            fecha: new Date().toISOString()
           };
           ventas.push(venta);
           // Guardar la venta en Firebase
-          db.collection("ventas")
-            .add(venta)
-            .then((docRef) =>
-              console.log("Venta registrada con ID:", docRef.id)
-            )
-            .catch((error) =>
-              console.error("Error al registrar venta:", error)
-            );
+          db.collection("ventas").add(venta)
+            .then(docRef => console.log("Venta registrada con ID:", docRef.id))
+            .catch(error => console.error("Error al registrar venta:", error));
         });
         carrito = [];
         actualizarCarrito();
@@ -498,7 +494,7 @@
       /********* Funciones de Reportes *********/
       function filtrarVentas(filtro) {
         const ahora = new Date();
-        return ventas.filter((venta) => {
+        return ventas.filter(venta => {
           const fechaVenta = new Date(venta.fecha);
           if (filtro === "diario") {
             return fechaVenta.toDateString() === ahora.toDateString();
@@ -506,10 +502,7 @@
             const diff = (ahora - fechaVenta) / (1000 * 60 * 60 * 24);
             return diff <= 7;
           } else if (filtro === "mensual") {
-            return (
-              ahora.getMonth() === fechaVenta.getMonth() &&
-              ahora.getFullYear() === fechaVenta.getFullYear()
-            );
+            return (ahora.getMonth() === fechaVenta.getMonth()) && (ahora.getFullYear() === fechaVenta.getFullYear());
           } else if (filtro === "anual") {
             return ahora.getFullYear() === fechaVenta.getFullYear();
           }
@@ -520,15 +513,14 @@
       function generarReporte(tipo) {
         let ventasFiltradas = filtrarVentas(tipo);
         let total = ventasFiltradas.reduce((acum, v) => acum + v.totalVenta, 0);
-        let html =
-          "<table style='width:100%; border-collapse: collapse;'><thead><tr><th>Código</th><th>Producto</th><th>Cantidad</th><th>Total Venta</th></tr></thead><tbody>";
-        ventasFiltradas.forEach((v) => {
+        let html = "<table style='width:100%; border-collapse: collapse;'><thead><tr><th>Código</th><th>Producto</th><th>Cantidad</th><th>Total Venta</th></tr></thead><tbody>";
+        ventasFiltradas.forEach(v => {
           html += `<tr>
-          <td>${v.codigo}</td>
-          <td>${v.nombre}</td>
-          <td>${v.cantidad}</td>
-          <td>$${v.totalVenta.toFixed(2)}</td>
-        </tr>`;
+            <td>${v.codigo}</td>
+            <td>${v.nombre}</td>
+            <td>${v.cantidad}</td>
+            <td>$${v.totalVenta.toFixed(2)}</td>
+          </tr>`;
         });
         html += "</tbody></table>";
         html += `<p>Total ${tipo}: $${total.toFixed(2)}</p>`;
@@ -554,33 +546,25 @@
       });
 
       function iniciarQuagga() {
-        if (
-          navigator.mediaDevices &&
-          typeof navigator.mediaDevices.getUserMedia === "function"
-        ) {
-          Quagga.init(
-            {
-              inputStream: {
-                name: "Live",
-                type: "LiveStream",
-                target: videoScan,
-                constraints: {
-                  facingMode: "environment",
-                },
-              },
-              decoder: {
-                readers: ["ean_reader", "upc_reader", "code_128_reader"],
-              },
-            },
-            function (err) {
-              if (err) {
-                console.error(err);
-                return;
+        if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === "function") {
+          Quagga.init({
+            inputStream: {
+              name: "Live",
+              type: "LiveStream",
+              target: videoScan,
+              constraints: {
+                facingMode: "environment"
               }
-              Quagga.start();
+            },
+            decoder: { readers: ["ean_reader", "upc_reader", "code_128_reader"] }
+          }, function(err) {
+            if (err) {
+              console.error(err);
+              return;
             }
-          );
-          Quagga.onDetected(function (result) {
+            Quagga.start();
+          });
+          Quagga.onDetected(function(result) {
             const code = result.codeResult.code;
             barcodeResultP.textContent = "Código detectado: " + code;
             codigoVentaInput.value = code;
